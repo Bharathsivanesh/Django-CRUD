@@ -2,11 +2,14 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { ToastContainer } from "react-toastify";
+import { showToastMessage } from "../Component/Toast";
 export default function Todo() {
   const [todos, setTodos] = useState([]);
   const [task, setTask] = useState("");
   const [editIndex, setEditIndex] = useState(null);
   const [loading, setloading] = useState(true);
+  const [iserror, setiserror] = useState(false);
   const handleAdd = async () => {
     if (!task.trim()) return;
     if (editIndex !== null) {
@@ -37,11 +40,14 @@ export default function Todo() {
       const response = await axios.post("http://127.0.0.1:8000/myapp/", {
         content: task,
       });
-
+      showToastMessage("Sucessfully Added", true);
       console.log("The response is", response.data);
+      setiserror(false);
     } catch (e) {
       console.log("The Error is ", e);
       setloading(false);
+      showToastMessage(e.message, false);
+      setiserror(true);
     }
   }
 
@@ -52,16 +58,25 @@ export default function Todo() {
       if (!isload) {
         setloading(true);
         await Timer();
+        showToastMessage("Sucessfully Fetched Data", true);
       }
-      setTodos(
-        response.data.map((item, idx) => ({
-          data: item.content,
-          index: item.id,
-        }))
-      );
+      if (Array.isArray(response.data)) {
+        setTodos(
+          response.data.map((item, idx) => ({
+            data: item.content,
+            index: item.id,
+          }))
+        );
+        setiserror(false);
+      } else {
+        setTodos([]);
+        showToastMessage(response.data.message, true);
+      }
     } catch (e) {
       console.log("Ther erris is ", e);
       setloading(false);
+      showToastMessage(e.message, false);
+      setiserror(true);
     }
   }
 
@@ -72,10 +87,14 @@ export default function Todo() {
       const response = await axios.delete(
         `http://127.0.0.1:8000/myapp/delete/${id}/`
       );
+      showToastMessage("Sucessfully Deleted", true);
       console.log("The response from get is ", response.data);
+      setiserror(false);
     } catch (e) {
       console.log("Ther erris is ", e);
       setloading(false);
+      showToastMessage(e.message, false);
+      setiserror(true);
     }
   }
   const Timer = () => {
@@ -83,7 +102,7 @@ export default function Todo() {
       setTimeout(() => {
         setloading(false);
         resolve();
-      }, [3000]);
+      }, 3000);
     });
   };
 
@@ -94,12 +113,15 @@ export default function Todo() {
       const response = await axios.get(
         `http://127.0.0.1:8000/myapp/view/${id}/`
       );
-
+      showToastMessage("Sucessfully Get Edited Data", true);
       setTask(response?.data?.content);
       console.log("The response from get is ", response.data);
+      setiserror(false);
     } catch (e) {
       console.log("Ther error is ", e);
       setloading(false);
+      showToastMessage(e.message, false);
+      setiserror(true);
     }
   }
 
@@ -111,10 +133,14 @@ export default function Todo() {
         `http://127.0.0.1:8000/myapp/edit/${editIndex}/`,
         { content: task }
       );
+      showToastMessage("Sucessfully Data Updated", true);
       console.log("The response from get is ", response.data);
+      setiserror(false);
     } catch (e) {
       console.log("Ther erris is ", e);
       setloading(false);
+      showToastMessage(e.message, false);
+      setiserror(true);
     }
   }
 
@@ -124,62 +150,79 @@ export default function Todo() {
 
   return (
     <>
-      <div
-        className={`absolute  top-0 right-0 flex items-center justify-center h-full w-full bg-black/40 ${
-          loading ? "block" : "hidden"
-        }`}
-      >
-        <DotLottieReact
-          src="https://lottie.host/c7440070-14b6-440c-b321-14db07c3fb0b/79HcaO5cP8.lottie"
-          loop
-          autoplay
-          className="w-full h-full"
-        />
-      </div>
-      <div className="flex flex-col items-center min-h-screen bg-gray-100 p-8">
-        <h1 className="text-3xl font-bold mb-6">✅ TODO App</h1>
-
-        <div className="flex w-full max-w-md mb-6">
-          <input
-            type="text"
-            value={task}
-            onChange={(e) => setTask(e.target.value)}
-            placeholder="Enter task..."
-            className="flex-1 px-4 py-2 rounded-l-lg border border-gray-300 focus:outline-none"
+      {loading ? (
+        <div className="flex items-center justify-center h-screen bg-gray-100">
+          <DotLottieReact
+            src="https://lottie.host/c7440070-14b6-440c-b321-14db07c3fb0b/79HcaO5cP8.lottie"
+            loop
+            autoplay
           />
-          <button
-            onClick={handleAdd}
-            className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-r-lg hover:bg-blue-600"
-          >
-            {editIndex !== null ? "Update" : "Add"}
-          </button>
         </div>
+      ) : iserror ? (
+        <div className="flex items-center md:ml-56 flex-col justify-end h-full w-2/3 ">
+          <DotLottieReact
+            src="https://lottie.host/7ce98474-d5c1-4aa2-8c15-3831d1566bae/O8g02ckbFH.lottie"
+            loop
+            autoplay
+          />
+          <span className="italic font-serif text-red-600 font-medium text-2xl">
+            Check Your Internet Or Server Off{" "}
+          </span>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center min-h-screen bg-gray-100 p-8">
+          <h1 className="text-3xl font-bold mb-6">✅ TODO App</h1>
 
-        <ul className="w-full max-w-md">
-          {todos.map((todo, index) => (
-            <li
-              key={index}
-              className="flex justify-between items-center bg-white shadow-md p-3 rounded-lg mb-3"
+          <div className="flex w-full max-w-md mb-6">
+            <input
+              type="text"
+              value={task}
+              onChange={(e) => setTask(e.target.value)}
+              placeholder="Enter task..."
+              className="flex-1 px-4 py-2 rounded-l-lg border border-gray-300 focus:outline-none"
+            />
+            <button
+              onClick={handleAdd}
+              className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-r-lg hover:bg-blue-600"
             >
-              <span>{todo.data}</span>
-              <div className="space-x-2">
-                <button
-                  onClick={() => handleEdit(todo.index)}
-                  className="px-2 py-1 text-sm bg-yellow-400 text-white rounded hover:bg-yellow-500"
+              {editIndex !== null ? "Update" : "Add"}
+            </button>
+          </div>
+
+          {todos.length > 0 ? (
+            todos.map((todo, index) => (
+              <ul key={index} className="w-full max-w-md">
+                <li
+                  key={index}
+                  className="flex justify-between items-center bg-white shadow-md p-3 rounded-lg mb-3"
                 >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(todo.index)}
-                  className="px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
+                  <span>{todo.data}</span>
+                  <div className="space-x-2">
+                    <button
+                      onClick={() => handleEdit(todo.index)}
+                      className="px-2 py-1 text-sm bg-yellow-400 text-white rounded hover:bg-yellow-500"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(todo.index)}
+                      className="px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              </ul>
+            ))
+          ) : (
+            <h1 className="text-2xl font-semibold text-gray-600">
+              No Tasks Available
+            </h1>
+          )}
+
+          <ToastContainer />
+        </div>
+      )}
     </>
   );
 }
