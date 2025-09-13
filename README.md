@@ -34,3 +34,6 @@ Backend (Django):
 Database:
 
 🐘 PostgreSQL
+
+Screenshots:
+https://github.com/user-attachments/assets/44af936a-522d-47d8-a5e9-0d454cecfc03
