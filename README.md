@@ -36,4 +36,4 @@ Database:
 🐘 PostgreSQL
 
 Screenshots:
-https://github.com/user-attachments/assets/44af936a-522d-47d8-a5e9-0d454cecfc03
+<img width="1907" height="869" alt="Image" src="https://github.com/user-attachments/assets/44af936a-522d-47d8-a5e9-0d454cecfc03" />
